@@ -1,4 +1,5 @@
 # Japanese Enterprise Knowledge Assistant
+<img width="1906" height="915" alt="image" src="https://github.com/user-attachments/assets/81227914-93b5-4c77-9055-698ac880803d" />
 
 A local-first enterprise RAG web app for answering questions from Japanese business documents with citations. The project is designed as a production-shaped AI engineering portfolio build: document ingestion, local multilingual embeddings, vector retrieval, role/access filtering hooks, OpenAI answer generation, and a usable retro RPG styled frontend.
 
