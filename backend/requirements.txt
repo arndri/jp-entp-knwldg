@@ -1,0 +1,12 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+python-multipart==0.0.20
+openai==1.59.7
+qdrant-client==1.12.1
+pypdf==5.1.0
+numpy==2.2.1
+torch
+transformers>=5.8.1
+sentence-transformers>=5.5.0
