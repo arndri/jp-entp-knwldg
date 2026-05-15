@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 3000",
     "build": "vite build",
+    "test:e2e": "node ./tests/e2e-smoke.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 3000"
   },
   "dependencies": {
@@ -15,6 +16,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@playwright/test": "^1.53.0"
+  }
 }
-

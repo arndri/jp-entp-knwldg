@@ -5,7 +5,7 @@ This is the first backend vertical slice for the Japanese Enterprise Knowledge A
 It supports:
 
 - PDF text extraction with page numbers
-- Chunking
+- Sentence-aware chunking with whole-sentence overlap
 - Local `BAAI/bge-m3` embeddings
 - Qdrant vector indexing
 - Access-level filtering
@@ -13,6 +13,18 @@ It supports:
 - Citation output
 
 OCR, auth, Postgres persistence, frontend, hybrid BM25, reranking, and evaluation dashboards come after this slice is working.
+
+## Current Chunking
+
+The current chunker is intentionally moderate:
+
+- Works page by page so citations stay simple.
+- Splits on Japanese and English sentence endings.
+- Packs complete sentences up to the configured chunk size.
+- Uses sentence overlap instead of raw character overlap.
+- Falls back to hard splits only when one sentence is longer than the chunk limit.
+
+This is more coherent than fixed character windows without adding section hierarchy or parent-child retrieval yet.
 
 ## Requirements
 
@@ -108,6 +120,42 @@ $env:PYTHONIOENCODING="utf-8"
 - `GET /api/health`
 - `POST /api/ingest`
 - `POST /api/chat`
+
+## Development Checks
+
+Install test dependencies once:
+
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+```
+
+Run the full local pre-push check from the project root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test_project.ps1
+```
+
+The script runs:
+
+- backend compile check
+- backend unit tests with `pytest`
+- frontend production build
+- frontend Playwright E2E smoke test
+
+## Retrieval Evaluation
+
+Retrieval evaluation is local because the real PDFs are not committed to the repository.
+
+```powershell
+Copy-Item .\eval\questions.example.jsonl .\eval\questions.local.jsonl
+cd backend
+.\.venv\Scripts\python.exe ..\scripts\evaluate_retrieval.py --questions ..\eval\questions.local.jsonl --top-k 5
+```
+
+Edit `eval/questions.local.jsonl` with real gold questions and expected source pages before trusting the scores.
+Qdrant must be running and the target documents must already be indexed.
 
 ## Current Smoke Test
 

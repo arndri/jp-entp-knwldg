@@ -7,7 +7,7 @@ The current MVP indexes local Japanese PDF documents, stores chunk vectors in Qd
 ## What The App Does
 
 - Extracts text from Japanese PDF documents while preserving page numbers.
-- Splits documents into retrievable chunks.
+- Splits documents into sentence-aware retrievable chunks with whole-sentence overlap.
 - Generates local embeddings with `BAAI/bge-m3`.
 - Stores vectors and metadata in Qdrant.
 - Answers user questions using retrieved context and OpenAI.
@@ -121,9 +121,61 @@ http://127.0.0.1:3000
 - `POST /api/ingest`
 - `POST /api/chat`
 
+## Pre-Push Validation
+
+Install backend development dependencies once:
+
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+```
+
+Before pushing changes, run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test_project.ps1
+```
+
+This currently runs:
+
+- backend Python compile check
+- backend `pytest` suite
+- frontend production build
+- frontend Playwright E2E smoke test
+
+This is intentionally small for the MVP, but it gives the project a repeatable development gate before commits and pushes.
+
+## Retrieval Evaluation
+
+Retrieval quality needs a gold question set and an indexed local corpus, so it is kept as a local evaluation workflow instead of a CI requirement.
+
+1. Copy the example file:
+
+```powershell
+Copy-Item .\eval\questions.example.jsonl .\eval\questions.local.jsonl
+```
+
+2. Replace it with real questions and expected source pages from your documents.
+
+3. Start local services and index the documents you want to evaluate.
+
+4. Run:
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe ..\scripts\evaluate_retrieval.py --questions ..\eval\questions.local.jsonl --top-k 5
+```
+
+The script reports:
+
+- `recall_at_k`
+- `mrr`
+
+Use it to compare chunking/retrieval changes against the same gold set before deciding whether a change is actually better.
+
 ## Notes
 
 - Real API keys belong only in `.env`.
 - PDFs, local databases, vector storage, logs, build output, and virtual environments are intentionally ignored.
 - OCR, authentication UI, persistent chat history, hybrid BM25 retrieval, reranking, and evaluation dashboards are planned follow-up layers.
-
