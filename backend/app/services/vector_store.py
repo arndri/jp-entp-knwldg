@@ -30,3 +30,23 @@ def upsert_chunks(
     ensure_collection(client, collection_name, vector_size)
     client.upsert(collection_name=collection_name, points=points)
 
+
+def delete_document_chunks(document_id: str) -> None:
+    settings = get_settings()
+    client = get_qdrant_client()
+    collections = client.get_collections().collections
+    if not any(collection.name == settings.qdrant_collection for collection in collections):
+        return
+    client.delete(
+        collection_name=settings.qdrant_collection,
+        points_selector=models.FilterSelector(
+            filter=models.Filter(
+                must=[
+                    models.FieldCondition(
+                        key="document_id",
+                        match=models.MatchValue(value=document_id),
+                    )
+                ]
+            )
+        ),
+    )

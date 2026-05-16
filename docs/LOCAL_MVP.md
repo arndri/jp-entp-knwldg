@@ -9,11 +9,13 @@ It supports:
 - Sentence-aware chunking with whole-sentence overlap
 - Local `BAAI/bge-m3` embeddings
 - Qdrant vector indexing
+- PostgreSQL document registry and ingestion job tracking
 - Access-level filtering
+- JWT login with `admin` and `user` roles
 - OpenAI answer generation
 - Citation output
 
-OCR, auth, Postgres persistence, frontend, hybrid BM25, reranking, and evaluation dashboards come after this slice is working.
+OCR, auth, persistent chat history, hybrid BM25, reranking, and evaluation dashboards come after this slice is working.
 
 ## Current Chunking
 
@@ -61,6 +63,8 @@ By default, Docling is only used for PDFs with at most `15` pages. Larger PDFs a
 - Docker Desktop
 - Python 3.13 works for the current scaffold, but Python 3.11 or 3.12 remains safer for ML packages
 - An OpenAI API key in `.env`
+- Or a DeepSeek API key in `.env` with `LLM_PROVIDER=deepseek`
+- `JWT_SECRET_KEY` plus bootstrap admin/user credentials in `.env`
 - Optional `HF_TOKEN` in `.env` for authenticated Hugging Face model downloads
 
 The embedding path uses `sentence-transformers` to load `BAAI/bge-m3`. If future ML packages fail on Python 3.13, create the virtual environment with Python 3.11/3.12.
@@ -148,7 +152,12 @@ $env:PYTHONIOENCODING="utf-8"
 ## API
 
 - `GET /api/health`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
 - `POST /api/ingest`
+- `GET /api/documents`
+- `DELETE /api/documents/{document_id}`
+- `POST /api/documents/{document_id}/reindex`
 - `POST /api/chat`
 
 ## Development Checks

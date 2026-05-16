@@ -21,6 +21,7 @@ body {
   overflow-x: hidden;
 }
 
+input,
 button,
 select,
 textarea {
@@ -360,6 +361,52 @@ h2 {
   align-items: stretch;
 }
 
+.login-panel,
+.session-strip {
+  margin-top: 24px;
+}
+
+.login-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(320px, 560px);
+  gap: 20px;
+  align-items: end;
+  padding: 22px;
+}
+
+.login-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr 140px;
+  gap: 12px;
+  align-items: end;
+}
+
+.login-form .pixel-input {
+  min-height: 44px;
+  padding: 6px 8px;
+}
+
+.login-form .pixel-button {
+  margin-top: 0;
+}
+
+.session-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  padding: 12px;
+}
+
+.role-badge {
+  padding: 5px 8px;
+  color: #15100c;
+  background: #35d46a;
+  border: 3px solid #2a170f;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+}
+
 .sidebar,
 .chat-panel,
 .citations {
@@ -461,6 +508,103 @@ select.pixel-input {
 .sample-list {
   display: grid;
   gap: 12px;
+}
+
+.document-list {
+  display: grid;
+  gap: 12px;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.document-card {
+  padding: 10px;
+  background: #241c17;
+  border: 4px solid #5f5140;
+  box-shadow: inset 4px 4px rgba(255, 236, 185, 0.08);
+}
+
+.document-title-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.document-card h3 {
+  margin-bottom: 6px;
+  color: #ffd987;
+  font-family: "Press Start 2P", monospace;
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.document-card p {
+  margin-bottom: 8px;
+  color: #ffedbd;
+  font-size: 18px;
+}
+
+.document-card small {
+  display: block;
+  margin-bottom: 8px;
+  color: #ffb0a3;
+  font-size: 16px;
+  line-height: 1.05;
+}
+
+.document-status {
+  padding: 4px 5px;
+  color: #16100c;
+  background: #e7ba6b;
+  border: 3px solid #2a170f;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+}
+
+.document-status.indexed {
+  background: #35d46a;
+}
+
+.document-status.failed {
+  background: #d73a30;
+}
+
+.document-status.processing {
+  background: #e7ba6b;
+}
+
+.document-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mini-button {
+  min-height: 34px;
+  color: #fff0bd;
+  background: #8a5732;
+  border: 4px solid #23150d;
+  box-shadow: inset 4px 4px #c68a4d, inset -4px -4px #4a2718, 0 4px 0 #1b100a;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  cursor: pointer;
+}
+
+.mini-button.danger {
+  background: #963732;
+  box-shadow: inset 4px 4px #e15a47, inset -4px -4px #471a1b, 0 4px 0 #1b100a;
+}
+
+.mini-button:active {
+  transform: translateY(3px);
+  box-shadow: inset 4px 4px #4a2718, inset -4px -4px #c68a4d, 0 1px 0 #1b100a;
+}
+
+.mini-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .sample-button {
@@ -582,6 +726,11 @@ select.pixel-input {
   line-height: 1.1;
 }
 
+.empty-state.compact {
+  margin-bottom: 0;
+  font-size: 18px;
+}
+
 .citation-list {
   display: grid;
   gap: 14px;
@@ -667,10 +816,15 @@ select.pixel-input {
   }
 
   .hero-hud,
+  .login-panel,
   .chat-header,
   .ask-form {
     grid-template-columns: 1fr;
     flex-direction: column;
+  }
+
+  .login-form {
+    grid-template-columns: 1fr;
   }
 
   .party-hud {
@@ -702,4 +856,3 @@ select.pixel-input {
     max-width: none;
   }
 }
-

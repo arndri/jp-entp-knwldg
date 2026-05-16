@@ -24,14 +24,24 @@ Question:
 
 def generate_answer(question: str, citations: list[Citation]) -> str:
     settings = get_settings()
-    if settings.llm_provider != "openai":
+    if settings.llm_provider == "openai":
+        if not settings.openai_api_key:
+            raise ValueError("OPENAI_API_KEY is missing.")
+        client = OpenAI(api_key=settings.openai_api_key)
+        model = settings.openai_model
+    elif settings.llm_provider == "deepseek":
+        if not settings.deepseek_api_key:
+            raise ValueError("DEEPSEEK_API_KEY is missing.")
+        client = OpenAI(
+            api_key=settings.deepseek_api_key,
+            base_url=settings.deepseek_base_url,
+        )
+        model = settings.deepseek_model
+    else:
         raise ValueError(f"Unsupported LLM provider: {settings.llm_provider}")
-    if not settings.openai_api_key:
-        raise ValueError("OPENAI_API_KEY is missing.")
 
-    client = OpenAI(api_key=settings.openai_api_key)
     response = client.chat.completions.create(
-        model=settings.openai_model,
+        model=model,
         messages=[
             {
                 "role": "system",
@@ -41,4 +51,3 @@ def generate_answer(question: str, citations: list[Citation]) -> str:
         ],
     )
     return response.choices[0].message.content or ""
-

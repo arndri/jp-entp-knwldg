@@ -45,6 +45,9 @@ async function run() {
     await waitForServer("http://127.0.0.1:3000");
     browser = await chromium.launch();
     const page = await browser.newPage();
+    await page.addInitScript(() => {
+      localStorage.setItem("access_token", "token-1");
+    });
 
     await page.route("**/api/health", async (route) => {
       await route.fulfill({ json: { status: "ok" } });
@@ -65,6 +68,16 @@ async function run() {
             },
           ],
         },
+      });
+    });
+
+    await page.route("**/api/documents", async (route) => {
+      await route.fulfill({ json: [] });
+    });
+
+    await page.route("**/api/auth/me", async (route) => {
+      await route.fulfill({
+        json: { user_id: "user-1", email: "user@example.com", role: "user" },
       });
     });
 

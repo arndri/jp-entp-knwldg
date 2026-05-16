@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 test("user can ask a question and see citations", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("access_token", "token-1");
+  });
+
   await page.route("**/api/health", async (route) => {
     await route.fulfill({ json: { status: "ok" } });
   });
@@ -20,6 +24,16 @@ test("user can ask a question and see citations", async ({ page }) => {
           },
         ],
       },
+    });
+  });
+
+  await page.route("**/api/documents", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+
+  await page.route("**/api/auth/me", async (route) => {
+    await route.fulfill({
+      json: { user_id: "user-1", email: "user@example.com", role: "user" },
     });
   });
 

@@ -18,10 +18,27 @@ class Settings(BaseSettings):
     llm_provider: str = Field(default="openai", alias="LLM_PROVIDER")
     openai_api_key: str = Field(default="", alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-5-mini", alias="OPENAI_MODEL")
+    deepseek_api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
+    deepseek_model: str = Field(default="deepseek-v4-flash", alias="DEEPSEEK_MODEL")
+    deepseek_base_url: str = Field(
+        default="https://api.deepseek.com",
+        alias="DEEPSEEK_BASE_URL",
+    )
 
     qdrant_url: str = Field(default="http://localhost:6333", alias="QDRANT_URL")
     qdrant_api_key: str = Field(default="", alias="QDRANT_API_KEY")
     qdrant_collection: str = "jp_enterprise_chunks"
+    database_url: str = Field(
+        default="postgresql+psycopg://postgres:123@localhost:5432/jp_enterprise_knowledge",
+        alias="DATABASE_URL",
+    )
+    jwt_secret_key: str = Field(default="", alias="JWT_SECRET_KEY")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(default=480, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    bootstrap_admin_email: str = Field(default="admin@example.com", alias="BOOTSTRAP_ADMIN_EMAIL")
+    bootstrap_admin_password: str = Field(default="admin12345", alias="BOOTSTRAP_ADMIN_PASSWORD")
+    bootstrap_user_email: str = Field(default="user@example.com", alias="BOOTSTRAP_USER_EMAIL")
+    bootstrap_user_password: str = Field(default="user12345", alias="BOOTSTRAP_USER_PASSWORD")
 
     embedding_provider: str = Field(default="local", alias="EMBEDDING_PROVIDER")
     embedding_model: str = Field(default="BAAI/bge-m3", alias="EMBEDDING_MODEL")

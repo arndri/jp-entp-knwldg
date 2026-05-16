@@ -7,6 +7,10 @@ openai==1.59.7
 qdrant-client==1.12.1
 pypdf==5.1.0
 docling
+sqlalchemy==2.0.36
+psycopg[binary]==3.2.3
+bcrypt==4.1.3
+PyJWT==2.10.1
 numpy==2.2.1
 torch
 transformers>=5.8.1

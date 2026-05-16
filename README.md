@@ -12,9 +12,12 @@ The current MVP indexes local Japanese PDF documents, stores chunk vectors in Qd
 - Splits documents into sentence-aware retrievable chunks with whole-sentence overlap.
 - Generates local embeddings with `BAAI/bge-m3`.
 - Stores vectors and metadata in Qdrant.
+- Tracks documents, source metadata, chunk records, and ingestion jobs in PostgreSQL.
 - Answers user questions using retrieved context and OpenAI.
+- Supports JWT login with `admin` and `user` roles.
 - Shows source citations with document name, page number, excerpt, and retrieval score.
-- Provides a themed web UI with document indexing, chat, access-level selection, and citation panels.
+- Provides a themed web UI with document indexing, re-index/delete controls, status tracking, chat, access-level selection, and citation panels.
+- Restricts document management to admins and derives query permissions from the logged-in user.
 
 ## Tech Stack
 
@@ -39,7 +42,7 @@ AI / Retrieval:
 - Embedding runtime: `sentence-transformers`
 - GPU acceleration: PyTorch CUDA, tested with RTX 4060
 - Vector database: Qdrant
-- LLM provider: OpenAI
+- LLM provider: OpenAI or DeepSeek
 
 Local Infrastructure:
 
@@ -72,7 +75,16 @@ Then fill in at least:
 ```text
 OPENAI_API_KEY=
 JWT_SECRET_KEY=
+BOOTSTRAP_ADMIN_EMAIL=admin@example.com
+BOOTSTRAP_ADMIN_PASSWORD=admin12345
+BOOTSTRAP_USER_EMAIL=user@example.com
+BOOTSTRAP_USER_PASSWORD=user12345
 HF_TOKEN=
+LLM_PROVIDER=openai
+OPENAI_MODEL=
+DEEPSEEK_API_KEY=
+DEEPSEEK_MODEL=deepseek-v4-flash
+DEEPSEEK_BASE_URL=https://api.deepseek.com
 DOCUMENT_EXTRACTOR=pypdf
 DOCLING_DO_OCR=false
 DOCLING_DEVICE=cpu
@@ -129,7 +141,12 @@ http://127.0.0.1:3000
 ## API Endpoints
 
 - `GET /api/health`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
 - `POST /api/ingest`
+- `GET /api/documents`
+- `DELETE /api/documents/{document_id}`
+- `POST /api/documents/{document_id}/reindex`
 - `POST /api/chat`
 
 ## Pre-Push Validation
@@ -188,8 +205,10 @@ Use it to compare chunking/retrieval changes against the same gold set before de
 ## Notes
 
 - Real API keys belong only in `.env`.
+- Change the bootstrap passwords before using the app beyond local development.
+- Set `LLM_PROVIDER=deepseek` with `DEEPSEEK_API_KEY` to use DeepSeek through its OpenAI-compatible API. The default DeepSeek model in this project is `deepseek-v4-flash`.
 - PDFs, local databases, vector storage, logs, build output, and virtual environments are intentionally ignored.
-- OCR, authentication UI, persistent chat history, hybrid BM25 retrieval, reranking, and evaluation dashboards are planned follow-up layers.
+- OCR, persistent chat history, hybrid BM25 retrieval, reranking, and evaluation dashboards are planned follow-up layers.
 - `DOCUMENT_EXTRACTOR=docling` enables Docling-backed PDF ingestion. `DOCLING_DO_OCR=true` enables Docling OCR for scanned PDFs, which is slower and may require OCR runtime dependencies depending on the selected OCR engine.
 - `DOCLING_DEVICE=cpu` is the default here because Docling's layout models can be memory-heavy on smaller GPUs. Change it deliberately if you want to test `cuda`.
 - `DOCLING_FALLBACK_TO_PYPDF=true` keeps ingestion complete if Docling fails on some pages by filling missing page text from the lightweight extractor.
