@@ -5,6 +5,7 @@ This is the first backend vertical slice for the Japanese Enterprise Knowledge A
 It supports:
 
 - PDF text extraction with page numbers
+- Switchable PDF extraction with `pypdf` or `Docling`
 - Sentence-aware chunking with whole-sentence overlap
 - Local `BAAI/bge-m3` embeddings
 - Qdrant vector indexing
@@ -25,6 +26,35 @@ The current chunker is intentionally moderate:
 - Falls back to hard splits only when one sentence is longer than the chunk limit.
 
 This is more coherent than fixed character windows without adding section hierarchy or parent-child retrieval yet.
+
+## Document Extraction
+
+The ingestion layer supports two PDF extraction backends:
+
+```text
+DOCUMENT_EXTRACTOR=pypdf
+DOCUMENT_EXTRACTOR=docling
+```
+
+Use `pypdf` for the fastest lightweight path. Use `docling` when you want richer PDF conversion and a path toward OCR/layout-aware ingestion.
+
+For scanned PDFs:
+
+```text
+DOCUMENT_EXTRACTOR=docling
+DOCLING_DO_OCR=true
+DOCLING_DEVICE=cpu
+DOCLING_FALLBACK_TO_PYPDF=true
+DOCLING_LAYOUT_BATCH_SIZE=1
+DOCLING_OCR_BATCH_SIZE=1
+DOCLING_TABLE_BATCH_SIZE=1
+DOCLING_MAX_PAGES=15
+```
+
+Docling OCR is slower than plain text extraction, so keep it disabled unless a document needs it. This project defaults Docling to CPU mode because the Docling layout pipeline can be memory-heavy on smaller GPUs; set `DOCLING_DEVICE=cuda` only when you want to test that path explicitly.
+If Docling cannot process every page, the default fallback fills missing pages from `pypdf` so ingestion coverage stays complete.
+Batch sizes default to `1` for stability. Higher values can improve throughput, but they also increase memory use.
+By default, Docling is only used for PDFs with at most `15` pages. Larger PDFs automatically use `pypdf`, which matches the observed local stability profile.
 
 ## Requirements
 

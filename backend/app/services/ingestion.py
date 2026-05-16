@@ -7,7 +7,7 @@ from app.core.config import ROOT_DIR, get_settings
 from app.schemas.rag import IngestResponse
 from app.services.chunking import chunk_pages
 from app.services.embeddings import get_embedder
-from app.services.pdf import extract_pdf_pages
+from app.services.extraction import get_page_extractor
 from app.services.vector_store import get_qdrant_client, upsert_chunks
 
 
@@ -26,10 +26,10 @@ def resolve_document_path(path_value: str) -> Path:
 def ingest_pdf(path_value: str, access_level: str) -> IngestResponse:
     settings = get_settings()
     path = resolve_document_path(path_value)
-    pages = extract_pdf_pages(path)
+    pages = get_page_extractor().extract_pages(path)
     if not pages:
         raise ValueError(
-            "No text was extracted. This PDF may be scanned; OCR will be added in the next pipeline phase."
+            "No text was extracted. Try enabling Docling OCR for scanned PDFs."
         )
 
     chunks = chunk_pages(pages, settings.chunk_size, settings.chunk_overlap)
@@ -64,4 +64,3 @@ def ingest_pdf(path_value: str, access_level: str) -> IngestResponse:
     upsert_chunks(client, settings.qdrant_collection, points, vector_size)
 
     return IngestResponse(document_id=document_id, title=path.name, chunks_indexed=len(points))
-

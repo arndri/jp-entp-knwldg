@@ -8,6 +8,7 @@ The current MVP indexes local Japanese PDF documents, stores chunk vectors in Qd
 ## What The App Does
 
 - Extracts text from Japanese PDF documents while preserving page numbers.
+- Supports switchable PDF extraction backends: lightweight `pypdf` or structure-aware `Docling`.
 - Splits documents into sentence-aware retrievable chunks with whole-sentence overlap.
 - Generates local embeddings with `BAAI/bge-m3`.
 - Stores vectors and metadata in Qdrant.
@@ -30,6 +31,7 @@ Backend:
 - Pydantic Settings
 - OpenAI Python SDK
 - pypdf
+- Docling
 
 AI / Retrieval:
 
@@ -71,6 +73,14 @@ Then fill in at least:
 OPENAI_API_KEY=
 JWT_SECRET_KEY=
 HF_TOKEN=
+DOCUMENT_EXTRACTOR=pypdf
+DOCLING_DO_OCR=false
+DOCLING_DEVICE=cpu
+DOCLING_FALLBACK_TO_PYPDF=true
+DOCLING_LAYOUT_BATCH_SIZE=1
+DOCLING_OCR_BATCH_SIZE=1
+DOCLING_TABLE_BATCH_SIZE=1
+DOCLING_MAX_PAGES=15
 ```
 
 Start local services:
@@ -180,3 +190,8 @@ Use it to compare chunking/retrieval changes against the same gold set before de
 - Real API keys belong only in `.env`.
 - PDFs, local databases, vector storage, logs, build output, and virtual environments are intentionally ignored.
 - OCR, authentication UI, persistent chat history, hybrid BM25 retrieval, reranking, and evaluation dashboards are planned follow-up layers.
+- `DOCUMENT_EXTRACTOR=docling` enables Docling-backed PDF ingestion. `DOCLING_DO_OCR=true` enables Docling OCR for scanned PDFs, which is slower and may require OCR runtime dependencies depending on the selected OCR engine.
+- `DOCLING_DEVICE=cpu` is the default here because Docling's layout models can be memory-heavy on smaller GPUs. Change it deliberately if you want to test `cuda`.
+- `DOCLING_FALLBACK_TO_PYPDF=true` keeps ingestion complete if Docling fails on some pages by filling missing page text from the lightweight extractor.
+- The Docling batch-size settings default to `1` to favor stability over throughput on local hardware; raise them only after measuring memory headroom.
+- `DOCLING_MAX_PAGES=15` means Docling is only used for smaller PDFs by default; larger PDFs automatically use `pypdf`.

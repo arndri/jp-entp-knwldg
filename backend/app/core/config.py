@@ -26,6 +26,14 @@ class Settings(BaseSettings):
     embedding_provider: str = Field(default="local", alias="EMBEDDING_PROVIDER")
     embedding_model: str = Field(default="BAAI/bge-m3", alias="EMBEDDING_MODEL")
     hf_token: str = Field(default="", alias="HF_TOKEN")
+    document_extractor: str = Field(default="pypdf", alias="DOCUMENT_EXTRACTOR")
+    docling_do_ocr: bool = Field(default=False, alias="DOCLING_DO_OCR")
+    docling_device: str = Field(default="cpu", alias="DOCLING_DEVICE")
+    docling_fallback_to_pypdf: bool = Field(default=True, alias="DOCLING_FALLBACK_TO_PYPDF")
+    docling_layout_batch_size: int = Field(default=1, alias="DOCLING_LAYOUT_BATCH_SIZE")
+    docling_ocr_batch_size: int = Field(default=1, alias="DOCLING_OCR_BATCH_SIZE")
+    docling_table_batch_size: int = Field(default=1, alias="DOCLING_TABLE_BATCH_SIZE")
+    docling_max_pages: int = Field(default=15, alias="DOCLING_MAX_PAGES")
 
     max_context_chunks: int = 6
     chunk_size: int = 900

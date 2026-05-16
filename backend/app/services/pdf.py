@@ -3,6 +3,10 @@ from pathlib import Path
 from pypdf import PdfReader
 
 
+def count_pdf_pages(path: Path) -> int:
+    return len(PdfReader(str(path)).pages)
+
+
 def extract_pdf_pages(path: Path) -> list[tuple[int, str]]:
     reader = PdfReader(str(path))
     pages: list[tuple[int, str]] = []
@@ -14,4 +18,3 @@ def extract_pdf_pages(path: Path) -> list[tuple[int, str]]:
             pages.append((index, text))
 
     return pages
-
