@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -80,3 +80,51 @@ class IngestionJob(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     document: Mapped[Document] = relationship(back_populates="ingestion_jobs")
+
+
+class EvaluationRun(Base):
+    __tablename__ = "evaluation_runs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    name: Mapped[str] = mapped_column(String(255))
+    question_set_path: Mapped[str] = mapped_column(Text)
+    top_k: Mapped[int] = mapped_column(Integer, default=5)
+    access_levels: Mapped[str] = mapped_column(Text)
+    question_count: Mapped[int] = mapped_column(Integer, default=0)
+    hit_count: Mapped[int] = mapped_column(Integer, default=0)
+    recall_at_k: Mapped[float] = mapped_column(Float, default=0.0)
+    mrr: Mapped[float] = mapped_column(Float, default=0.0)
+    average_latency_ms: Mapped[float] = mapped_column(Float, default=0.0)
+    status: Mapped[str] = mapped_column(String(32), default="completed")
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by: Mapped[str | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+    items: Mapped[list["EvaluationItem"]] = relationship(
+        back_populates="run",
+        cascade="all, delete-orphan",
+    )
+
+
+class EvaluationItem(Base):
+    __tablename__ = "evaluation_items"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    run_id: Mapped[str] = mapped_column(
+        ForeignKey("evaluation_runs.id", ondelete="CASCADE"),
+        index=True,
+    )
+    question_id: Mapped[str] = mapped_column(String(255))
+    question: Mapped[str] = mapped_column(Text)
+    expected_document: Mapped[str] = mapped_column(String(255))
+    expected_pages: Mapped[str] = mapped_column(Text)
+    retrieved_document: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    retrieved_page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    reciprocal_rank: Mapped[float] = mapped_column(Float, default=0.0)
+    latency_ms: Mapped[float] = mapped_column(Float, default=0.0)
+
+    run: Mapped[EvaluationRun] = relationship(back_populates="items")

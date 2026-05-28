@@ -14,6 +14,7 @@ It supports:
 - JWT login with `admin` and `user` roles
 - OpenAI answer generation
 - Citation output
+- Admin retrieval evaluation dashboard
 
 OCR, auth, persistent chat history, hybrid BM25, reranking, and evaluation dashboards come after this slice is working.
 
@@ -158,6 +159,8 @@ $env:PYTHONIOENCODING="utf-8"
 - `GET /api/documents`
 - `DELETE /api/documents/{document_id}`
 - `POST /api/documents/{document_id}/reindex`
+- `GET /api/evaluations`
+- `POST /api/evaluations/run`
 - `POST /api/chat`
 
 ## Development Checks

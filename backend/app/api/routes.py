@@ -6,6 +6,8 @@ from app.schemas.rag import (
     ChatRequest,
     ChatResponse,
     DocumentResponse,
+    EvaluationRunRequest,
+    EvaluationRunResponse,
     IngestRequest,
     IngestResponse,
     LoginRequest,
@@ -21,6 +23,7 @@ from app.services.auth import (
     to_user_response,
 )
 from app.services.documents import delete_document, get_document, list_documents
+from app.services.evaluation import list_evaluation_runs, run_retrieval_evaluation
 from app.services.ingestion import ingest_pdf
 from app.services.llm import generate_answer
 from app.services.retrieval import retrieve
@@ -92,6 +95,26 @@ def reindex_document(
         raise HTTPException(status_code=404, detail="Document not found.")
     try:
         return ingest_pdf(document.source_path, document.access_level, session, document)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.get("/evaluations", response_model=list[EvaluationRunResponse])
+def evaluations(
+    session: Session = Depends(get_db_session),
+    _: object = Depends(require_admin),
+) -> list[EvaluationRunResponse]:
+    return list_evaluation_runs(session)
+
+
+@router.post("/evaluations/run", response_model=EvaluationRunResponse)
+def run_evaluation(
+    request: EvaluationRunRequest,
+    session: Session = Depends(get_db_session),
+    current_user=Depends(require_admin),
+) -> EvaluationRunResponse:
+    try:
+        return run_retrieval_evaluation(session, request, current_user)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 

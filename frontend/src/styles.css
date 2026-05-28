@@ -449,6 +449,11 @@ select.pixel-input {
   padding: 6px 8px;
 }
 
+input.pixel-input {
+  min-height: 44px;
+  padding: 6px 8px;
+}
+
 .pixel-button,
 .sample-button {
   cursor: pointer;
@@ -579,6 +584,68 @@ select.pixel-input {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
+}
+
+.eval-card {
+  padding: 12px;
+  background: #241c17;
+  border: 4px solid #5f5140;
+  box-shadow: inset 4px 4px rgba(255, 236, 185, 0.08);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.metric-grid div {
+  padding: 8px;
+  background: #1a100c;
+  border: 3px solid #6a4a31;
+}
+
+.metric-grid span,
+.eval-item span {
+  display: block;
+  color: #f7c96e;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+}
+
+.metric-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: #35d46a;
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+}
+
+.eval-card p {
+  margin: 10px 0;
+  color: #ffedbd;
+  font-size: 18px;
+}
+
+.eval-item {
+  margin-top: 8px;
+  padding: 8px;
+  border: 3px solid #6a4a31;
+}
+
+.eval-item.hit {
+  background: #173b28;
+}
+
+.eval-item.miss {
+  background: #4a1e1c;
+}
+
+.eval-item small {
+  display: block;
+  margin-top: 4px;
+  color: #e5ce9d;
+  font-size: 15px;
 }
 
 .mini-button {

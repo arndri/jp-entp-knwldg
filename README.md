@@ -18,6 +18,7 @@ The current MVP indexes local Japanese PDF documents, stores chunk vectors in Qd
 - Shows source citations with document name, page number, excerpt, and retrieval score.
 - Provides a themed web UI with document indexing, re-index/delete controls, status tracking, chat, access-level selection, and citation panels.
 - Restricts document management to admins and derives query permissions from the logged-in user.
+- Gives admins a retrieval evaluation dashboard with recall, MRR, latency, and per-question hit details.
 
 ## Tech Stack
 
@@ -147,6 +148,8 @@ http://127.0.0.1:3000
 - `GET /api/documents`
 - `DELETE /api/documents/{document_id}`
 - `POST /api/documents/{document_id}/reindex`
+- `GET /api/evaluations`
+- `POST /api/evaluations/run`
 - `POST /api/chat`
 
 ## Pre-Push Validation
@@ -201,6 +204,7 @@ The script reports:
 - `mrr`
 
 Use it to compare chunking/retrieval changes against the same gold set before deciding whether a change is actually better.
+Admins can also run this evaluation from the web dashboard. The dashboard stores each run in PostgreSQL and shows recall, MRR, average retrieval latency, and question-level hit/miss details.
 
 ## Notes
 

@@ -140,6 +140,51 @@ def test_reindex_document_uses_saved_document_metadata(monkeypatch) -> None:
     assert response.json()["chunks_indexed"] == 4
 
 
+def test_evaluations_returns_runs(monkeypatch) -> None:
+    monkeypatch.setattr("app.api.routes.list_evaluation_runs", lambda session: [])
+
+    response = client.get("/api/evaluations")
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_run_evaluation_returns_metrics(monkeypatch) -> None:
+    payload = {
+        "run_id": "run-1",
+        "name": "retrieval-eval",
+        "question_set_path": "eval/questions.local.jsonl",
+        "top_k": 5,
+        "access_levels": ["public"],
+        "question_count": 2,
+        "hit_count": 1,
+        "recall_at_k": 0.5,
+        "mrr": 0.5,
+        "average_latency_ms": 10.0,
+        "status": "completed",
+        "error_message": None,
+        "created_at": "2026-05-16T00:00:00Z",
+        "items": [],
+    }
+    monkeypatch.setattr(
+        "app.api.routes.run_retrieval_evaluation",
+        lambda session, request, current_user: payload,
+    )
+
+    response = client.post(
+        "/api/evaluations/run",
+        json={
+            "name": "retrieval-eval",
+            "question_set_path": "eval/questions.local.jsonl",
+            "top_k": 5,
+            "access_levels": ["public"],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["recall_at_k"] == 0.5
+
+
 def test_chat_uses_permissions_from_current_user(monkeypatch) -> None:
     app.dependency_overrides[get_current_user] = lambda: regular_user
     observed: dict[str, object] = {}

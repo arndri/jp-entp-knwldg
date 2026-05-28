@@ -81,6 +81,10 @@ async function run() {
       });
     });
 
+    await page.route("**/api/evaluations", async (route) => {
+      await route.fulfill({ json: [] });
+    });
+
     await page.goto("http://127.0.0.1:3000");
     await page.getByText("Japanese Enterprise Knowledge Assistant").waitFor();
     await page.locator("textarea").fill("What is this document about?");

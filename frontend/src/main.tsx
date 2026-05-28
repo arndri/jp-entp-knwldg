@@ -56,6 +56,36 @@ type TokenResponse = {
   token_type: string;
 };
 
+type EvaluationItem = {
+  question_id: string;
+  question: string;
+  expected_document: string;
+  expected_pages: number[];
+  retrieved_document: string | null;
+  retrieved_page: number | null;
+  rank: number | null;
+  reciprocal_rank: number;
+  latency_ms: number;
+  hit: boolean;
+};
+
+type EvaluationRun = {
+  run_id: string;
+  name: string;
+  question_set_path: string;
+  top_k: number;
+  access_levels: string[];
+  question_count: number;
+  hit_count: number;
+  recall_at_k: number;
+  mrr: number;
+  average_latency_ms: number;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+  items: EvaluationItem[];
+};
+
 const sampleQuestions = [
   "この文書は何について説明していますか？",
   "特定技能外国人を雇用する流れを教えてください。",
@@ -92,6 +122,11 @@ function App() {
   const [ingesting, setIngesting] = useState(false);
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [documentBusyId, setDocumentBusyId] = useState<string | null>(null);
+  const [evaluationRuns, setEvaluationRuns] = useState<EvaluationRun[]>([]);
+  const [latestEvaluation, setLatestEvaluation] = useState<EvaluationRun | null>(null);
+  const [evaluating, setEvaluating] = useState(false);
+  const [questionSetPath, setQuestionSetPath] = useState("eval/questions.local.jsonl");
+  const [evalTopK, setEvalTopK] = useState(5);
   const [status, setStatus] = useState<"checking" | "online" | "offline">("checking");
   const [notice, setNotice] = useState("Index jp_rag_1.pdf first if the vector store is empty.");
 
@@ -146,11 +181,28 @@ function App() {
       const user = (await response.json()) as CurrentUser;
       setCurrentUser(user);
       await refreshDocuments();
+      if (user.role === "admin") {
+        await refreshEvaluations();
+      }
     } catch {
       localStorage.removeItem("access_token");
       setToken("");
       setCurrentUser(null);
       setDocuments([]);
+      setEvaluationRuns([]);
+      setLatestEvaluation(null);
+    }
+  }
+
+  async function refreshEvaluations() {
+    try {
+      const response = await apiFetch("/evaluations");
+      if (!response.ok) {
+        throw new Error("Could not load evaluations.");
+      }
+      setEvaluationRuns((await response.json()) as EvaluationRun[]);
+    } catch {
+      setEvaluationRuns([]);
     }
   }
 
@@ -180,6 +232,8 @@ function App() {
     setToken("");
     setCurrentUser(null);
     setDocuments([]);
+    setEvaluationRuns([]);
+    setLatestEvaluation(null);
     setNotice("Logged out.");
   }
 
@@ -245,6 +299,36 @@ function App() {
       setNotice(error instanceof Error ? error.message : "Delete failed");
     } finally {
       setDocumentBusyId(null);
+    }
+  }
+
+  async function runEvaluation() {
+    setEvaluating(true);
+    setNotice("Running retrieval evaluation...");
+    try {
+      const response = await apiFetch("/evaluations/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "retrieval-eval",
+          question_set_path: questionSetPath,
+          top_k: evalTopK,
+          access_levels: ["public", "hr", "engineering", "admin"],
+        }),
+      });
+      const payload = (await response.json()) as EvaluationRun | { detail: string };
+      if (!response.ok) {
+        throw new Error("detail" in payload ? payload.detail : "Evaluation failed");
+      }
+      setLatestEvaluation(payload);
+      await refreshEvaluations();
+      setNotice(
+        `Eval complete: recall ${(payload.recall_at_k * 100).toFixed(0)}%, MRR ${payload.mrr.toFixed(2)}.`,
+      );
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Evaluation failed");
+    } finally {
+      setEvaluating(false);
     }
   }
 
@@ -445,6 +529,64 @@ function App() {
             )}
 
             <div className="divider-bar"><span /></div>
+
+            {currentUser.role === "admin" && (
+              <>
+                <div className="panel-title small">Eval Ledger</div>
+                <label className="field-label" htmlFor="question-set">Gold Set</label>
+                <input
+                  id="question-set"
+                  className="pixel-input"
+                  value={questionSetPath}
+                  onChange={(event) => setQuestionSetPath(event.target.value)}
+                />
+                <label className="field-label" htmlFor="eval-top-k">Top K</label>
+                <input
+                  id="eval-top-k"
+                  className="pixel-input"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={evalTopK}
+                  onChange={(event) => setEvalTopK(Number(event.target.value))}
+                />
+                <button className="pixel-button green" onClick={runEvaluation} disabled={evaluating}>
+                  {evaluating ? "Measuring..." : "Run Eval"}
+                </button>
+                {(latestEvaluation ?? evaluationRuns[0]) && (
+                  <div className="eval-card">
+                    <div className="metric-grid">
+                      <div>
+                        <span>Recall</span>
+                        <strong>{(((latestEvaluation ?? evaluationRuns[0]).recall_at_k) * 100).toFixed(0)}%</strong>
+                      </div>
+                      <div>
+                        <span>MRR</span>
+                        <strong>{(latestEvaluation ?? evaluationRuns[0]).mrr.toFixed(2)}</strong>
+                      </div>
+                      <div>
+                        <span>Latency</span>
+                        <strong>{(latestEvaluation ?? evaluationRuns[0]).average_latency_ms.toFixed(0)}ms</strong>
+                      </div>
+                    </div>
+                    <p>
+                      {(latestEvaluation ?? evaluationRuns[0]).hit_count}/
+                      {(latestEvaluation ?? evaluationRuns[0]).question_count} hits
+                    </p>
+                    {(latestEvaluation?.items ?? []).slice(0, 4).map((item) => (
+                      <div className={`eval-item ${item.hit ? "hit" : "miss"}`} key={item.question_id}>
+                        <span>{item.question_id}</span>
+                        <small>
+                          {item.hit ? `hit rank ${item.rank}` : "miss"} · {item.expected_document}
+                        </small>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="divider-bar"><span /></div>
+              </>
+            )}
 
             <div className="panel-title small">Common Spells</div>
             <div className="sample-list">

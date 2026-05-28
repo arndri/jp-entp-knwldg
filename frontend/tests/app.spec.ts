@@ -37,6 +37,10 @@ test("user can ask a question and see citations", async ({ page }) => {
     });
   });
 
+  await page.route("**/api/evaluations", async (route) => {
+    await route.fulfill({ json: [] });
+  });
+
   await page.goto("/");
   await expect(page.getByText("Japanese Enterprise Knowledge Assistant")).toBeVisible();
   await page.getByPlaceholder(/質問|è³ª/).fill("What is this document about?");

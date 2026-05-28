@@ -60,3 +60,40 @@ class UserResponse(BaseModel):
     user_id: str
     email: str
     role: str
+
+
+class EvaluationRunRequest(BaseModel):
+    name: str = "retrieval-eval"
+    question_set_path: str = "eval/questions.local.jsonl"
+    top_k: int = 5
+    access_levels: list[str] = Field(default_factory=lambda: ["public"])
+
+
+class EvaluationItemResponse(BaseModel):
+    question_id: str
+    question: str
+    expected_document: str
+    expected_pages: list[int]
+    retrieved_document: str | None = None
+    retrieved_page: int | None = None
+    rank: int | None = None
+    reciprocal_rank: float
+    latency_ms: float
+    hit: bool
+
+
+class EvaluationRunResponse(BaseModel):
+    run_id: str
+    name: str
+    question_set_path: str
+    top_k: int
+    access_levels: list[str]
+    question_count: int
+    hit_count: int
+    recall_at_k: float
+    mrr: float
+    average_latency_ms: float
+    status: str
+    error_message: str | None = None
+    created_at: datetime
+    items: list[EvaluationItemResponse] = Field(default_factory=list)
