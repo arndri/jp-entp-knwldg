@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models import Document
 from app.schemas.rag import DocumentResponse
+from app.services.retrieval import clear_bm25_cache
 from app.services.vector_store import delete_document_chunks
 
 
@@ -45,3 +46,4 @@ def delete_document(session: Session, document: Document) -> None:
     delete_document_chunks(document.id)
     session.delete(document)
     session.commit()
+    clear_bm25_cache()

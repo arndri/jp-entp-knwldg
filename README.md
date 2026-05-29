@@ -14,6 +14,7 @@ The current MVP indexes local Japanese PDF documents, stores chunk vectors in Qd
 - Stores vectors and metadata in Qdrant.
 - Tracks documents, source metadata, chunk records, and ingestion jobs in PostgreSQL.
 - Combines vector retrieval with PostgreSQL-backed BM25 lexical retrieval using reciprocal rank fusion.
+- Caches the BM25 lexical index in memory so chunk tokenization is not repeated on every query.
 - Answers user questions using retrieved context and OpenAI.
 - Supports JWT login with `admin` and `user` roles.
 - Shows source citations with document name, page number, excerpt, and retrieval score.
@@ -215,12 +216,25 @@ The script reports:
 Use it to compare chunking/retrieval changes against the same gold set before deciding whether a change is actually better.
 Admins can also run this evaluation from the web dashboard. The dashboard stores each run in PostgreSQL and shows recall, MRR, average retrieval latency, and question-level hit/miss details.
 
+### Retrieval Quality Iteration
+
+The evaluation dashboard was used to compare retrieval changes on a local 25-question gold set for `jp_rag_1.pdf`:
+
+| Retrieval mode | Recall | MRR | Average latency | Hits |
+| --- | ---: | ---: | ---: | ---: |
+| Vector only baseline | 92% | 0.73 | 191ms | 23/25 |
+| Hybrid, query-time BM25 | 96% | 0.80 | 3982ms | 24/25 |
+| Hybrid, cached BM25 | 96% | 0.78 | 215ms | 24/25 |
+
+The final version keeps the recall gain from hybrid retrieval while moving BM25 tokenization and document-frequency calculation out of the hot query path.
+
 ## Notes
 
 - Real API keys belong only in `.env`.
 - Change the bootstrap passwords before using the app beyond local development.
 - Chat guardrails reject obvious prompt-injection attempts before retrieval and refuse generation when retrieved citations are below `MIN_RETRIEVAL_SCORE`.
 - `RETRIEVAL_MODE=hybrid` combines Qdrant vector search with BM25 over PostgreSQL chunk text. Set `RETRIEVAL_MODE=vector` to compare against the vector-only baseline in the evaluation dashboard.
+- The BM25 index is cached in memory per access-level set and invalidated after ingest, re-index, or delete. The first query after a cache miss rebuilds it from PostgreSQL; later queries reuse tokenized chunks.
 - Set `LLM_PROVIDER=deepseek` with `DEEPSEEK_API_KEY` to use DeepSeek through its OpenAI-compatible API. The default DeepSeek model in this project is `deepseek-v4-flash`.
 - PDFs, local databases, vector storage, logs, build output, and virtual environments are intentionally ignored.
 - OCR, persistent chat history, hybrid BM25 retrieval, reranking, and evaluation dashboards are planned follow-up layers.

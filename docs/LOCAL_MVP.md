@@ -11,6 +11,7 @@ It supports:
 - Qdrant vector indexing
 - PostgreSQL document registry and ingestion job tracking
 - Hybrid retrieval with Qdrant vector search plus PostgreSQL-backed BM25
+- In-memory BM25 cache invalidated after document mutations
 - Access-level filtering
 - JWT login with `admin` and `user` roles
 - OpenAI answer generation

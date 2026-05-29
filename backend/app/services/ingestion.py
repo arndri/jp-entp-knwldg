@@ -11,6 +11,7 @@ from app.schemas.rag import IngestResponse
 from app.services.chunking import chunk_pages
 from app.services.embeddings import get_embedder
 from app.services.extraction import get_page_extractor
+from app.services.retrieval import clear_bm25_cache, warm_bm25_cache
 from app.services.vector_store import delete_document_chunks, get_qdrant_client, upsert_chunks
 
 
@@ -108,6 +109,8 @@ def ingest_pdf(
         job.chunk_count = len(points)
         job.completed_at = utc_now()
         session.commit()
+        clear_bm25_cache()
+        warm_bm25_cache(session, [access_level])
     except Exception as exc:
         session.rollback()
         document = session.get(Document, document.id)

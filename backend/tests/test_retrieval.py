@@ -98,3 +98,32 @@ def test_retrieve_hybrid_fuses_vector_and_bm25(monkeypatch) -> None:
     results = retrieval.retrieve("question", ["public"], session=object())
 
     assert {citation.chunk_id for citation in results} == {"vector", "bm25"}
+
+
+def test_bm25_search_reuses_cached_index(monkeypatch) -> None:
+    retrieval.clear_bm25_cache()
+    calls = {"load": 0}
+    candidates = [
+        retrieval.ChunkCandidate(
+            chunk_id="chunk-1",
+            document_id="doc-1",
+            title="sample.pdf",
+            page_number=1,
+            text="特定技能制度 申請 書類",
+            score=0.0,
+        )
+    ]
+
+    def fake_load(session, access_levels):
+        calls["load"] += 1
+        return candidates
+
+    monkeypatch.setattr(retrieval, "load_authorized_chunks", fake_load)
+
+    first = retrieval.bm25_search("特定技能 申請", ["public"], object(), 5)
+    second = retrieval.bm25_search("制度 書類", ["public"], object(), 5)
+
+    assert calls["load"] == 1
+    assert first[0].chunk_id == "chunk-1"
+    assert second[0].chunk_id == "chunk-1"
+    retrieval.clear_bm25_cache()

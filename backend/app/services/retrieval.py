@@ -2,6 +2,7 @@ import math
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
+from threading import Lock
 
 from qdrant_client.http import models
 from sqlalchemy import select
@@ -25,6 +26,19 @@ class ChunkCandidate:
     page_number: int
     text: str
     score: float
+
+
+@dataclass(frozen=True)
+class BM25Index:
+    access_key: tuple[str, ...]
+    candidates: list[ChunkCandidate]
+    tokenized_chunks: list[list[str]]
+    doc_freq: Counter[str]
+    avg_doc_len: float
+
+
+_bm25_cache: dict[tuple[str, ...], BM25Index] = {}
+_bm25_cache_lock = Lock()
 
 
 def tokenize(text: str) -> list[str]:
@@ -103,13 +117,58 @@ def load_authorized_chunks(session: Session, access_levels: list[str]) -> list[C
     ]
 
 
+def build_bm25_index(session: Session, access_levels: list[str]) -> BM25Index:
+    access_key = tuple(sorted(set(access_levels)))
+    candidates = load_authorized_chunks(session, list(access_key))
+    tokenized_chunks = [tokenize(candidate.text) for candidate in candidates]
+    doc_freq: Counter[str] = Counter()
+    for tokens in tokenized_chunks:
+        doc_freq.update(set(tokens))
+    avg_doc_len = (
+        sum(len(tokens) for tokens in tokenized_chunks) / len(tokenized_chunks)
+        if tokenized_chunks
+        else 0.0
+    )
+    return BM25Index(
+        access_key=access_key,
+        candidates=candidates,
+        tokenized_chunks=tokenized_chunks,
+        doc_freq=doc_freq,
+        avg_doc_len=avg_doc_len,
+    )
+
+
+def get_bm25_index(session: Session, access_levels: list[str]) -> BM25Index:
+    access_key = tuple(sorted(set(access_levels)))
+    with _bm25_cache_lock:
+        cached = _bm25_cache.get(access_key)
+        if cached is not None:
+            return cached
+        index = build_bm25_index(session, list(access_key))
+        _bm25_cache[access_key] = index
+        return index
+
+
+def clear_bm25_cache() -> None:
+    with _bm25_cache_lock:
+        _bm25_cache.clear()
+
+
+def warm_bm25_cache(session: Session, access_levels: list[str]) -> None:
+    access_key = tuple(sorted(set(access_levels)))
+    index = build_bm25_index(session, list(access_key))
+    with _bm25_cache_lock:
+        _bm25_cache[access_key] = index
+
+
 def bm25_search(
     question: str,
     access_levels: list[str],
     session: Session,
     limit: int,
 ) -> list[Citation]:
-    candidates = load_authorized_chunks(session, access_levels)
+    index = get_bm25_index(session, access_levels)
+    candidates = index.candidates
     if not candidates:
         return []
 
@@ -117,12 +176,10 @@ def bm25_search(
     if not query_tokens:
         return []
 
-    docs_tokens = [tokenize(candidate.text) for candidate in candidates]
+    docs_tokens = index.tokenized_chunks
     doc_count = len(docs_tokens)
-    avg_doc_len = sum(len(tokens) for tokens in docs_tokens) / doc_count
-    doc_freq: Counter[str] = Counter()
-    for tokens in docs_tokens:
-        doc_freq.update(set(tokens))
+    avg_doc_len = index.avg_doc_len
+    doc_freq = index.doc_freq
 
     query_counts = Counter(query_tokens)
     k1 = 1.5
