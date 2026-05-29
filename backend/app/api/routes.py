@@ -24,6 +24,12 @@ from app.services.auth import (
 )
 from app.services.documents import delete_document, get_document, list_documents
 from app.services.evaluation import list_evaluation_runs, run_retrieval_evaluation
+from app.services.guardrails import (
+    CONTEXT_REFUSAL,
+    POLICY_REFUSAL,
+    filter_relevant_citations,
+    validate_question,
+)
 from app.services.ingestion import ingest_pdf
 from app.services.llm import generate_answer
 from app.services.retrieval import retrieve
@@ -125,12 +131,14 @@ def chat(
     current_user=Depends(get_current_user),
 ) -> ChatResponse:
     try:
+        guardrail = validate_question(request.question)
+        if not guardrail.allowed:
+            return ChatResponse(answer=POLICY_REFUSAL, citations=[])
+
         citations = retrieve(request.question, allowed_access_levels(current_user))
+        citations = filter_relevant_citations(citations)
         if not citations:
-            return ChatResponse(
-                answer="I could not find relevant authorized document context for this question.",
-                citations=[],
-            )
+            return ChatResponse(answer=CONTEXT_REFUSAL, citations=[])
         answer = generate_answer(request.question, citations)
         return ChatResponse(answer=answer, citations=citations)
     except Exception as exc:

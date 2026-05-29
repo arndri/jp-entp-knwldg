@@ -15,6 +15,7 @@ It supports:
 - OpenAI answer generation
 - Citation output
 - Admin retrieval evaluation dashboard
+- Chat guardrails for prompt injection and weak retrieval context
 
 OCR, auth, persistent chat history, hybrid BM25, reranking, and evaluation dashboards come after this slice is working.
 

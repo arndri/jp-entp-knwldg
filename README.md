@@ -19,6 +19,7 @@ The current MVP indexes local Japanese PDF documents, stores chunk vectors in Qd
 - Provides a themed web UI with document indexing, re-index/delete controls, status tracking, chat, access-level selection, and citation panels.
 - Restricts document management to admins and derives query permissions from the logged-in user.
 - Gives admins a retrieval evaluation dashboard with recall, MRR, latency, and per-question hit details.
+- Applies chat guardrails for prompt-injection attempts, overly long questions, and weak retrieval context.
 
 ## Tech Stack
 
@@ -94,6 +95,9 @@ DOCLING_LAYOUT_BATCH_SIZE=1
 DOCLING_OCR_BATCH_SIZE=1
 DOCLING_TABLE_BATCH_SIZE=1
 DOCLING_MAX_PAGES=15
+MAX_QUESTION_CHARS=1200
+MIN_RETRIEVAL_SCORE=0.35
+ENABLE_PROMPT_INJECTION_FILTER=true
 ```
 
 Start local services:
@@ -210,6 +214,7 @@ Admins can also run this evaluation from the web dashboard. The dashboard stores
 
 - Real API keys belong only in `.env`.
 - Change the bootstrap passwords before using the app beyond local development.
+- Chat guardrails reject obvious prompt-injection attempts before retrieval and refuse generation when retrieved citations are below `MIN_RETRIEVAL_SCORE`.
 - Set `LLM_PROVIDER=deepseek` with `DEEPSEEK_API_KEY` to use DeepSeek through its OpenAI-compatible API. The default DeepSeek model in this project is `deepseek-v4-flash`.
 - PDFs, local databases, vector storage, logs, build output, and virtual environments are intentionally ignored.
 - OCR, persistent chat history, hybrid BM25 retrieval, reranking, and evaluation dashboards are planned follow-up layers.

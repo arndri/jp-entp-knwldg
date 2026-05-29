@@ -55,6 +55,12 @@ class Settings(BaseSettings):
     max_context_chunks: int = 6
     chunk_size: int = 900
     chunk_overlap: int = 150
+    max_question_chars: int = Field(default=1200, alias="MAX_QUESTION_CHARS")
+    min_retrieval_score: float = Field(default=0.35, alias="MIN_RETRIEVAL_SCORE")
+    enable_prompt_injection_filter: bool = Field(
+        default=True,
+        alias="ENABLE_PROMPT_INJECTION_FILTER",
+    )
 
 
 @lru_cache
