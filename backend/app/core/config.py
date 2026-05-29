@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     docling_max_pages: int = Field(default=15, alias="DOCLING_MAX_PAGES")
 
     max_context_chunks: int = 6
+    retrieval_mode: str = Field(default="hybrid", alias="RETRIEVAL_MODE")
+    vector_candidate_limit: int = Field(default=20, alias="VECTOR_CANDIDATE_LIMIT")
+    bm25_candidate_limit: int = Field(default=20, alias="BM25_CANDIDATE_LIMIT")
+    rrf_k: int = Field(default=60, alias="RRF_K")
     chunk_size: int = 900
     chunk_overlap: int = 150
     max_question_chars: int = Field(default=1200, alias="MAX_QUESTION_CHARS")

@@ -114,7 +114,11 @@ def run_retrieval_evaluation(
 
     for question in questions:
         started = time.perf_counter()
-        citations = retrieve(question.question, request.access_levels)[: request.top_k]
+        citations = retrieve(
+            question.question,
+            request.access_levels,
+            session=session,
+        )[: request.top_k]
         latency_ms = (time.perf_counter() - started) * 1000
         latency_total += latency_ms
 

@@ -10,6 +10,7 @@ It supports:
 - Local `BAAI/bge-m3` embeddings
 - Qdrant vector indexing
 - PostgreSQL document registry and ingestion job tracking
+- Hybrid retrieval with Qdrant vector search plus PostgreSQL-backed BM25
 - Access-level filtering
 - JWT login with `admin` and `user` roles
 - OpenAI answer generation

@@ -128,6 +128,7 @@ def run_evaluation(
 @router.post("/chat", response_model=ChatResponse)
 def chat(
     request: ChatRequest,
+    session: Session = Depends(get_db_session),
     current_user=Depends(get_current_user),
 ) -> ChatResponse:
     try:
@@ -135,7 +136,11 @@ def chat(
         if not guardrail.allowed:
             return ChatResponse(answer=POLICY_REFUSAL, citations=[])
 
-        citations = retrieve(request.question, allowed_access_levels(current_user))
+        citations = retrieve(
+            request.question,
+            allowed_access_levels(current_user),
+            session=session,
+        )
         citations = filter_relevant_citations(citations)
         if not citations:
             return ChatResponse(answer=CONTEXT_REFUSAL, citations=[])

@@ -13,6 +13,7 @@ The current MVP indexes local Japanese PDF documents, stores chunk vectors in Qd
 - Generates local embeddings with `BAAI/bge-m3`.
 - Stores vectors and metadata in Qdrant.
 - Tracks documents, source metadata, chunk records, and ingestion jobs in PostgreSQL.
+- Combines vector retrieval with PostgreSQL-backed BM25 lexical retrieval using reciprocal rank fusion.
 - Answers user questions using retrieved context and OpenAI.
 - Supports JWT login with `admin` and `user` roles.
 - Shows source citations with document name, page number, excerpt, and retrieval score.
@@ -95,6 +96,10 @@ DOCLING_LAYOUT_BATCH_SIZE=1
 DOCLING_OCR_BATCH_SIZE=1
 DOCLING_TABLE_BATCH_SIZE=1
 DOCLING_MAX_PAGES=15
+RETRIEVAL_MODE=hybrid
+VECTOR_CANDIDATE_LIMIT=20
+BM25_CANDIDATE_LIMIT=20
+RRF_K=60
 MAX_QUESTION_CHARS=1200
 MIN_RETRIEVAL_SCORE=0.35
 ENABLE_PROMPT_INJECTION_FILTER=true
@@ -215,6 +220,7 @@ Admins can also run this evaluation from the web dashboard. The dashboard stores
 - Real API keys belong only in `.env`.
 - Change the bootstrap passwords before using the app beyond local development.
 - Chat guardrails reject obvious prompt-injection attempts before retrieval and refuse generation when retrieved citations are below `MIN_RETRIEVAL_SCORE`.
+- `RETRIEVAL_MODE=hybrid` combines Qdrant vector search with BM25 over PostgreSQL chunk text. Set `RETRIEVAL_MODE=vector` to compare against the vector-only baseline in the evaluation dashboard.
 - Set `LLM_PROVIDER=deepseek` with `DEEPSEEK_API_KEY` to use DeepSeek through its OpenAI-compatible API. The default DeepSeek model in this project is `deepseek-v4-flash`.
 - PDFs, local databases, vector storage, logs, build output, and virtual environments are intentionally ignored.
 - OCR, persistent chat history, hybrid BM25 retrieval, reranking, and evaluation dashboards are planned follow-up layers.

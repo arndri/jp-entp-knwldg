@@ -58,7 +58,7 @@ def test_run_retrieval_evaluation_calculates_metrics(tmp_path: Path, monkeypatch
         encoding="utf-8",
     )
 
-    def fake_retrieve(question, access_levels):
+    def fake_retrieve(question, access_levels, session=None):
         return [
             SimpleNamespace(title="sample.pdf", page_number=1),
             SimpleNamespace(title="other.pdf", page_number=2),

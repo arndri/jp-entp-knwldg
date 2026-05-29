@@ -189,7 +189,7 @@ def test_chat_uses_permissions_from_current_user(monkeypatch) -> None:
     app.dependency_overrides[get_current_user] = lambda: regular_user
     observed: dict[str, object] = {}
 
-    def fake_retrieve(question, access_levels):
+    def fake_retrieve(question, access_levels, session=None):
         observed["access_levels"] = access_levels
         return []
 
@@ -204,7 +204,7 @@ def test_chat_uses_permissions_from_current_user(monkeypatch) -> None:
 def test_chat_blocks_prompt_injection(monkeypatch) -> None:
     called = {"retrieve": False}
 
-    def fake_retrieve(question, access_levels):
+    def fake_retrieve(question, access_levels, session=None):
         called["retrieve"] = True
         return []
 
@@ -232,7 +232,7 @@ def test_chat_refuses_when_retrieval_score_is_too_low(monkeypatch) -> None:
             score=0.01,
         )
     ]
-    monkeypatch.setattr("app.api.routes.retrieve", lambda question, access_levels: citations)
+    monkeypatch.setattr("app.api.routes.retrieve", lambda question, access_levels, session=None: citations)
     monkeypatch.setattr(
         "app.api.routes.generate_answer",
         lambda question, found: "should not be generated",
@@ -256,7 +256,7 @@ def test_chat_returns_generated_answer_with_citations(monkeypatch) -> None:
             score=0.91,
         )
     ]
-    monkeypatch.setattr("app.api.routes.retrieve", lambda question, access_levels: citations)
+    monkeypatch.setattr("app.api.routes.retrieve", lambda question, access_levels, session=None: citations)
     monkeypatch.setattr("app.api.routes.generate_answer", lambda question, found: "Grounded answer [1]")
 
     response = client.post("/api/chat", json={"question": "hello"})
